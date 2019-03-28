@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= -g -Wall
-LFLAGS=
+LFLAGS= -lm
 
 base64 : main.o 
 	$(CC) $(CFLAGS) $(LFLAGS) -o base64 main.o 

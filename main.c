@@ -75,6 +75,9 @@ int main(int argc, char ** argv){
   }
 
   if(option == 'd'){
+    if(validate(msg, strlen(msg))){
+      exit(EXIT_FAILURE);
+    }
     out = decode(msg, strlen(msg));
   }
 
@@ -86,7 +89,7 @@ int main(int argc, char ** argv){
   printf("%s", out);
   free(out); 
   
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 

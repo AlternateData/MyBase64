@@ -24,6 +24,7 @@ const char * b64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy
 #define SECOND_OF_FOUR(X) ((X & (DECODE_MASK <<  8)) >>  8)
 #define THIRD_OF_FOUR(X)   (X &  DECODE_MASK)
 
+/* wrapper around fprintf(stderr, ...*/
 #define ERR_PRINT(...) {      \
  fprintf(stderr, "[ERROR]: ");\
  fprintf(stderr, __VA_ARGS__);\
@@ -42,10 +43,9 @@ char *msg;
 char *progname;
 
 int main(int argc, char ** argv){
-    /* read str from stdout and de/encode */
   char opt;
   progname = argv[0];
-  while((opt = getopt(argc, argv, "edf:")) != -1){
+  while((opt = getopt(argc, argv, "eds:")) != -1){
     switch(opt){
     case 'e':
       option = 'e';
@@ -53,12 +53,8 @@ int main(int argc, char ** argv){
     case 'd':
       option = 'd';
       break;
-    case 'f':
-      in = fopen(optarg, "rb");
-      if(!in){
-        ERR_PRINT("Failed to open file %s", optarg);
-        exit(EXIT_FAILURE);
-      }
+    case 's':
+      msg = optarg;
       break;
     case '?':
         ERR_PRINT("None of the necessary options was specified!");
@@ -66,39 +62,29 @@ int main(int argc, char ** argv){
 	exit(EXIT_FAILURE);
     }
   }
-  if(!in){
-    ERR_PRINT("No file to read from was given!");
-    exit(EXIT_FAILURE);
-  }
 
-  /* get file length, prepare memory and read from in */
-  size_t fsize;
-  fseek(in, 0, SEEK_END);
-  fsize = ftell(in);
-  fseek(in, 0, SEEK_SET);
-  msg = malloc(sizeof(*msg) * (fsize));
-  fread(msg, sizeof(char), fsize, in);
-  fclose(in);
-  free(in);
-  if(msg[fsize] == '\n'){
-    msg[fsize] = '\0';
+  /* if in is at this point still null then the flag -f was missing*/
+  if(!msg){
+    ERR_PRINT("No string to de/encode was given");
+    exit(EXIT_FAILURE);
   }
 
   char* out;
   if(option == 'e'){
-   out = encode(msg, fsize-1);
+    out = encode(msg, strlen(msg));
   }
 
   if(option == 'd'){
-   out = decode(msg, fsize);
+    out = decode(msg, strlen(msg));
   }
 
   if(!out){
+    ERR_PRINT("Fatal Error. Abort");
     exit(EXIT_FAILURE);
   }
   
   printf("%s", out);
-  
+  free(out); 
   
   return 0;
 }
@@ -126,8 +112,7 @@ int validate(const char * msg, size_t msg_len){
 }
 
 char * encode(const char * msg, size_t msg_len){
-
-  size_t chunks = 4 * ceil(msg_len/3);
+  size_t chunks = 4 * ceil(msg_len/3.0);
   size_t leftover = msg_len % 3;
 
   char * msg_chunks = malloc(sizeof(char) * chunks + 1);
@@ -178,6 +163,7 @@ char * decode(const char * msg, size_t msg_len){
   }
 
 
+  /* determine size of padding */
   size_t padding = 0;
   while(msg[msg_len - padding] == '='){
     padding++;
@@ -190,6 +176,7 @@ char * decode(const char * msg, size_t msg_len){
 
   char * out = malloc(sizeof(char) * (msg_len*6)/8 + 1);
   memset(out, 0, (msg_len*6)/8);
+
   int stream = 0;
   int k = 0;
   size_t i = 0;

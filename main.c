@@ -82,18 +82,19 @@ int main(int argc, char ** argv){
   }
 
   if(!out){
-    ERR_PRINT("Fatal Error. Abort");
+    ERR_PRINT("This is fatal. Abort");
     exit(EXIT_FAILURE);
   }
   
   printf("%s", out);
   free(out); 
-  
   return EXIT_SUCCESS;
 }
 
 
 char map(char letter){
+    if(letter == '=')
+        return 0;
     for(size_t i = 0; i < strlen(b64_alphabet); i++){
         if(b64_alphabet[i] == letter){
             return (char) i;
@@ -107,7 +108,7 @@ int validate(const char * msg, size_t msg_len){
     int ret = 0;
     for(size_t i = 0; i < msg_len; i++){
         if(map(msg[i]) == INVALID_CHAR){
-            ERR_PRINT("Invalid char %c at location %li", msg[i], i);
+            ERR_PRINT("Invalid char %c at location %li", msg[i], i+1);
             ret = 1;
         }
     }
@@ -161,7 +162,7 @@ char * encode(const char * msg, size_t msg_len){
 char * decode(const char * msg, size_t msg_len){
 
   if(msg_len % 4){
-    ERR_PRINT("Length of msg_len in decode is not 0 (mod 4)");
+    ERR_PRINT("Malformed Message. Length of msg_len in decode is not divisible by 4");
     return NULL;
   }
 
@@ -194,13 +195,13 @@ char * decode(const char * msg, size_t msg_len){
     out[k++] = THIRD_OF_FOUR(stream); 
   }
   if(padding == 1){
-    stream = (msg[i] << 18) + (msg[i + 1] << 12) + (msg[i + 2] << 6);
+    stream = (map(msg[i]) << 18) + (map(msg[i + 1]) << 12) + (map(msg[i + 2]) << 6);
     out[k++] = FIRST_OF_FOUR(stream); 
     out[k++] = SECOND_OF_FOUR(stream); 
   }
 
   if(padding == 2){
-    stream = (msg[i] << 18) +  (msg[i + 1] << 12);
+    stream = (map(msg[i]) << 18) +  (map(msg[i + 1]) << 12);
     out[k++] = FIRST_OF_FOUR(stream); 
   }
 

@@ -36,8 +36,8 @@ char * encode_b64(const char*, size_t);
 char * decode_b64(const char*, size_t);
 char * encode_b16(const char*, size_t);
 char * decode_b16(const char*, size_t);
-char   map_b64(char);
-char   map_b16(char);
+char   map_pad(char);
+char   map(const char *, char);
 int    validate_b64(const char*, size_t);
 int    validate_b16(const char*, size_t);
 
@@ -135,23 +135,27 @@ int main(int argc, char ** argv){
   return EXIT_SUCCESS;
 }
 
-
-char map_b64(char letter){
-    if(letter == '=')
-        return 0;
-    for(size_t i = 0; i < strlen(b64_alphabet); i++){
-        if(b64_alphabet[i] == letter){
+char map(const char * alphabet, char letter){
+    for(size_t i = 0; i < strlen(alphabet); i++){
+        if(alphabet[i] == letter){
             return (char) i;
         }
     }
     return INVALID_CHAR;
 }
 
+/* gives padding chars a pass */
+char map_pad(char letter){
+    if(letter == '=')
+        return 0;
+    return map(b64_alphabet, letter);
+}
+
 
 int validate_b64(const char * msg, size_t msg_len){
     int ret = 0;
     for(size_t i = 0; i < msg_len; i++){
-        if(map_b64(msg[i]) == INVALID_CHAR){
+        if(map_pad(msg[i]) == INVALID_CHAR){
             ERR_PRINT("Invalid char %c at location %li", msg[i], i+1);
             ret = 1;
         }
@@ -235,23 +239,23 @@ char * decode_b64(const char * msg, size_t msg_len){
   int k = 0;
   size_t i = 0;
   for(; i < msg_len - padding; i += 4){
-    stream = (map_b64(msg[i])     << 18) +  
-             (map_b64(msg[i + 1]) << 12) +
-             (map_b64(msg[i + 2]) <<  6) +
-             (map_b64(msg[i + 3])); 
+    stream = (map_pad(msg[i])     << 18) +  
+             (map_pad(msg[i + 1]) << 12) +
+             (map_pad(msg[i + 2]) <<  6) +
+             (map_pad(msg[i + 3])); 
 
     out[k++] = FIRST_OF_FOUR(stream); 
     out[k++] = SECOND_OF_FOUR(stream); 
     out[k++] = THIRD_OF_FOUR(stream); 
   }
   if(padding == 1){
-    stream = (map_b64(msg[i]) << 18) + (map_b64(msg[i + 1]) << 12) + (map_b64(msg[i + 2]) << 6);
+    stream = (map_pad(msg[i]) << 18) + (map_pad(msg[i + 1]) << 12) + (map_pad(msg[i + 2]) << 6);
     out[k++] = FIRST_OF_FOUR(stream); 
     out[k++] = SECOND_OF_FOUR(stream); 
   }
 
   if(padding == 2){
-    stream = (map_b64(msg[i]) << 18) +  (map_b64(msg[i + 1]) << 12);
+    stream = (map_pad(msg[i]) << 18) +  (map_pad(msg[i + 1]) << 12);
     out[k++] = FIRST_OF_FOUR(stream); 
   }
 
@@ -279,18 +283,10 @@ char* encode_b16(const char* bytes, size_t len){
 
 }
 
-char map_b16(char b16_char){
-  for(int i = 0; i < 16; i++){
-    if(b16_char == b16_alphabet[i])
-      return i;
-  }
-  return INVALID_CHAR;
-}
-
 int validate_b16(const char * bytes, size_t len){
     int ret = 0;
     for(size_t i = 0; i < len; i++){
-        if(map_b16(bytes[i]) == INVALID_CHAR){
+      if(map(b16_alphabet, bytes[i]) == INVALID_CHAR){
             ERR_PRINT("Invalid char %c at location %li", msg[i], i+1);
             ret = 1;
         }
@@ -315,11 +311,12 @@ char * decode_b16(const char * bytes, size_t len){
   size_t k = 0;
   char hi, lo;
   for(size_t i = 0; i < strlen(bytes); i+=2){
-    hi = map_b16(bytes[i]);
-    lo = map_b16(bytes[i+1]);
+    hi = map(b16_alphabet, bytes[i]);
+    lo = map(b16_alphabet, bytes[i+1]);
     hexstr[k++] = (hi << 4) + lo;
   }
   hexstr[k] = '\0';
 
   return hexstr;
 }
+

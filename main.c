@@ -90,26 +90,40 @@ int main(int argc, char ** argv){
   char* out;
   if(option == 'e'){
     switch(mode){
-
     case BASE64:
-    out = encode_b64(msg, strlen(msg));
-    break;
+      out = encode_b64(msg, strlen(msg));
+      break;
     case BASE16:
-    out = encode_b64(msg, strlen(msg));
-    break;
+      out = encode_b16(msg, strlen(msg));
+      break;
     case BASE8:
     case BASE2:
     default:
       ERR_PRINT("Desired encoding mode is not yet supported!");
-
+      exit(EXIT_SUCCESS);
     }
   }
 
   if(option == 'd'){
-    if(validate_b64(msg, strlen(msg))){
-      exit(EXIT_FAILURE);
+    switch(mode){
+    case BASE64:
+      if(validate_b64(msg, strlen(msg))){
+	exit(EXIT_FAILURE);
+      }
+      out = decode_b64(msg, strlen(msg));
+      break;
+    case BASE16:
+      if(validate_b16(msg, strlen(msg))){
+	exit(EXIT_FAILURE);
+      }
+      out = decode_b16(msg, strlen(msg));
+      break;
+    case BASE2:
+    case BASE8:
+    default:
+      ERR_PRINT("Desired encoding mode is not yet supported!");
+      exit(EXIT_SUCCESS);
     }
-    out = decode_b64(msg, strlen(msg));
   }
 
   if(!out){
@@ -150,7 +164,7 @@ char * encode_b64(const char * msg, size_t msg_len){
   size_t chunks = 4 * ceil(msg_len/3.0);
   size_t leftover = msg_len % 3;
 
-  char * msg_chunks = malloc(sizeof(char) * chunks + 1);
+  char * msg_chunks = malloc(sizeof(*msg_chunks) * chunks + 1);
   if(!msg_chunks){
     ERR_PRINT("Internal Error trying to allocate memory!" );
     return NULL;
@@ -210,7 +224,7 @@ char * decode_b64(const char * msg, size_t msg_len){
   }
 
   size_t outlen = (msg_len*6)/8 +1;
-  char * out = malloc(sizeof(char) * outlen);
+  char * out = malloc(sizeof(*out) * outlen);
   if(!out){
     ERR_PRINT("Malloc failed to allocate requested %li bytes", outlen);
     return NULL;
@@ -251,7 +265,7 @@ char * decode_b64(const char * msg, size_t msg_len){
 
 char* encode_b16(const char* bytes, size_t len){
   size_t outlen = len * 2 + 1;
-  char * hexstr = malloc(sizeof(char) * outlen);
+  char * hexstr = malloc(sizeof(*hexstr) * outlen);
   if(!hexstr){
     ERR_PRINT("Malloc failed to allocate requested %li bytes", outlen);
     return NULL;

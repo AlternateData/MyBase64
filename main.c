@@ -290,7 +290,7 @@ char map_b16(char b16_char){
 int validate_b16(const char * bytes, size_t len){
     int ret = 0;
     for(size_t i = 0; i < len; i++){
-        if(map_b64(bytes[i]) == INVALID_CHAR){
+        if(map_b16(bytes[i]) == INVALID_CHAR){
             ERR_PRINT("Invalid char %c at location %li", msg[i], i+1);
             ret = 1;
         }
@@ -299,7 +299,6 @@ int validate_b16(const char * bytes, size_t len){
 
 }
 
-/* TODO: test this */
 char * decode_b16(const char * bytes, size_t len){
   if(len % 2){
     ERR_PRINT("decode_b16: len must be divisible by 2");
@@ -323,5 +322,4 @@ char * decode_b16(const char * bytes, size_t len){
   hexstr[k] = '\0';
 
   return hexstr;
-
 }

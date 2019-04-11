@@ -11,19 +11,19 @@ const char * b16_alphabet = "0123456789abcdef";
 
 #define INVALID_CHAR 0x7f
 
-#define ENCODE_MASK 0x3f
-#define DECODE_MASK 0xff
+#define ENCODE_B64_MASK 0x3f
+#define DECODE_B64_MASK 0xff
 
 /* macros for encoding */
-#define FIRST_OF_THREE(X)  ((X >> 18) & ENCODE_MASK)
-#define SECOND_OF_THREE(X) ((X >> 12) & ENCODE_MASK) 
-#define THIRD_OF_THREE(X)  ((X >>  6) & ENCODE_MASK)
-#define FOURTH_OF_THREE(X)  (X        & ENCODE_MASK)
+#define FIRST_OF_THREE(X)  ((X >> 18) & ENCODE_B64_MASK)
+#define SECOND_OF_THREE(X) ((X >> 12) & ENCODE_B64_MASK) 
+#define THIRD_OF_THREE(X)  ((X >>  6) & ENCODE_B64_MASK)
+#define FOURTH_OF_THREE(X)  (X        & ENCODE_B64_MASK)
 
 /* macros for decoding */
-#define FIRST_OF_FOUR(X)  ((X >> 16) & DECODE_MASK) 
-#define SECOND_OF_FOUR(X) ((X >>  8) & DECODE_MASK) 
-#define THIRD_OF_FOUR(X)   (X        & DECODE_MASK)
+#define FIRST_OF_FOUR(X)  ((X >> 16) & DECODE_B64_MASK) 
+#define SECOND_OF_FOUR(X) ((X >>  8) & DECODE_B64_MASK) 
+#define THIRD_OF_FOUR(X)   (X        & DECODE_B64_MASK)
 
 /* wrapper around fprintf(stderr, ...*/
 #define ERR_PRINT(...) {      \
@@ -33,10 +33,14 @@ const char * b16_alphabet = "0123456789abcdef";
 }
 
 
-char * encode(const char*, size_t);
-char * decode(const char*, size_t);
-char   map(char);
-int    validate(const char*, size_t);
+char * encode_b64(const char*, size_t);
+char * decode_b64(const char*, size_t);
+char * encode_b16(const char*);
+char * decode_b16(const char*);
+char   map_b64(char);
+char   map_b16(char);
+int    validate_b64(const char*, size_t);
+int    validate_b16(const char*, size_t);
 
 char option;
 FILE * in;
@@ -66,20 +70,20 @@ int main(int argc, char ** argv){
 
   /* if in is at this point still null then the flag -f was missing*/
   if(!msg){
-    ERR_PRINT("No string to de/encode was given");
+    ERR_PRINT("No string to de/encode_b64 was given");
     exit(EXIT_FAILURE);
   }
 
   char* out;
   if(option == 'e'){
-    out = encode(msg, strlen(msg));
+    out = encode_b64(msg, strlen(msg));
   }
 
   if(option == 'd'){
-    if(validate(msg, strlen(msg))){
+    if(validate_b64(msg, strlen(msg))){
       exit(EXIT_FAILURE);
     }
-    out = decode(msg, strlen(msg));
+    out = decode_b64(msg, strlen(msg));
   }
 
   if(!out){
@@ -93,7 +97,7 @@ int main(int argc, char ** argv){
 }
 
 
-char map(char letter){
+char map_b64(char letter){
     if(letter == '=')
         return 0;
     for(size_t i = 0; i < strlen(b64_alphabet); i++){
@@ -105,10 +109,10 @@ char map(char letter){
 }
 
 
-int validate(const char * msg, size_t msg_len){
+int validate_b64(const char * msg, size_t msg_len){
     int ret = 0;
     for(size_t i = 0; i < msg_len; i++){
-        if(map(msg[i]) == INVALID_CHAR){
+        if(map_b64(msg[i]) == INVALID_CHAR){
             ERR_PRINT("Invalid char %c at location %li", msg[i], i+1);
             ret = 1;
         }
@@ -116,7 +120,7 @@ int validate(const char * msg, size_t msg_len){
     return ret; 
 }
 
-char * encode(const char * msg, size_t msg_len){
+char * encode_b64(const char * msg, size_t msg_len){
   size_t chunks = 4 * ceil(msg_len/3.0);
   size_t leftover = msg_len % 3;
 
@@ -160,10 +164,10 @@ char * encode(const char * msg, size_t msg_len){
   return msg_chunks;
 }
 
-char * decode(const char * msg, size_t msg_len){
+char * decode_b64(const char * msg, size_t msg_len){
 
   if(msg_len % 4){
-    ERR_PRINT("Malformed Message. Length of msg_len in decode is not divisible by 4");
+    ERR_PRINT("Malformed Message. Length of msg_len in decode_b64 is not divisible by 4");
     return NULL;
   }
 
@@ -192,23 +196,23 @@ char * decode(const char * msg, size_t msg_len){
   int k = 0;
   size_t i = 0;
   for(; i < msg_len - padding; i += 4){
-    stream = (map(msg[i])    << 18) +  
-             (map(msg[i + 1]) << 12) +
-             (map(msg[i + 2]) <<  6) +
-             (map(msg[i + 3])); 
+    stream = (map_b64(msg[i])     << 18) +  
+             (map_b64(msg[i + 1]) << 12) +
+             (map_b64(msg[i + 2]) <<  6) +
+             (map_b64(msg[i + 3])); 
 
     out[k++] = FIRST_OF_FOUR(stream); 
     out[k++] = SECOND_OF_FOUR(stream); 
     out[k++] = THIRD_OF_FOUR(stream); 
   }
   if(padding == 1){
-    stream = (map(msg[i]) << 18) + (map(msg[i + 1]) << 12) + (map(msg[i + 2]) << 6);
+    stream = (map_b64(msg[i]) << 18) + (map_b64(msg[i + 1]) << 12) + (map_b64(msg[i + 2]) << 6);
     out[k++] = FIRST_OF_FOUR(stream); 
     out[k++] = SECOND_OF_FOUR(stream); 
   }
 
   if(padding == 2){
-    stream = (map(msg[i]) << 18) +  (map(msg[i + 1]) << 12);
+    stream = (map_b64(msg[i]) << 18) +  (map_b64(msg[i + 1]) << 12);
     out[k++] = FIRST_OF_FOUR(stream); 
   }
 
@@ -219,7 +223,7 @@ char * decode(const char * msg, size_t msg_len){
 }
 
 
-char* tohex(char* bytes){
+char* encode_b16(const char* bytes){
   size_t outlen = strlen(bytes) * 2 + 1;
   char * hexstr = malloc(sizeof(char) * outlen);
   if(!hexstr){
@@ -236,7 +240,7 @@ char* tohex(char* bytes){
 
 }
 
-char mapb16(char b16_char){
+char map_b16(char b16_char){
   for(int i = 0; i < 16; i++){
     if(b16_char == b16_alphabet[i])
       return i;
@@ -245,7 +249,7 @@ char mapb16(char b16_char){
 }
 
 /* TODO: test this */
-char * fromhex(char * bytes){
+char * decode_b16(const char * bytes){
   if(strlen(bytes) % 2)
     return NULL;
 
@@ -256,8 +260,8 @@ char * fromhex(char * bytes){
   size_t k = 0;
   char hi, lo;
   for(size_t i = 0; i < strlen(bytes); i+=2){
-    hi = map(bytes[i]);
-    lo = map(bytes[i+1]);
+    hi = map_b16(bytes[i]);
+    lo = map_b16(bytes[i+1]);
     if(hi == INVALID_CHAR || lo == INVALID_CHAR)
       return NULL;
     hexstr[k++] = (hi << 4) + lo;

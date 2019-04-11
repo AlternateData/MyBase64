@@ -14,15 +14,15 @@ const char * b64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy
 #define DECODE_MASK 0xff
 
 /* macros for encoding */
-#define FIRST_OF_THREE(X)  ((X & (ENCODE_MASK << 18)) >> 18)
-#define SECOND_OF_THREE(X) ((X & (ENCODE_MASK << 12)) >> 12)
-#define THIRD_OF_THREE(X)  ((X & (ENCODE_MASK <<  6)) >>  6)
-#define FOURTH_OF_THREE(X)  (X &  ENCODE_MASK)
+#define FIRST_OF_THREE(X)  ((X >> 18) & ENCODE_MASK)
+#define SECOND_OF_THREE(X) ((X >> 12) & ENCODE_MASK) 
+#define THIRD_OF_THREE(X)  ((X >>  6) & ENCODE_MASK)
+#define FOURTH_OF_THREE(X)  (X        & ENCODE_MASK)
 
 /* macros for decoding */
-#define FIRST_OF_FOUR(X)  ((X & (DECODE_MASK << 16)) >> 16)
-#define SECOND_OF_FOUR(X) ((X & (DECODE_MASK <<  8)) >>  8)
-#define THIRD_OF_FOUR(X)   (X &  DECODE_MASK)
+#define FIRST_OF_FOUR(X)  ((X >> 16) & DECODE_MASK) 
+#define SECOND_OF_FOUR(X) ((X >>  8) & DECODE_MASK) 
+#define THIRD_OF_FOUR(X)   (X        & DECODE_MASK)
 
 /* wrapper around fprintf(stderr, ...*/
 #define ERR_PRINT(...) {      \

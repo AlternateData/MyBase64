@@ -35,22 +35,33 @@ const char * b16_alphabet = "0123456789abcdef";
 
 char * encode_b64(const char*, size_t);
 char * decode_b64(const char*, size_t);
-char * encode_b16(const char*);
-char * decode_b16(const char*);
+char * encode_b16(const char*, size_t);
+char * decode_b16(const char*, size_t);
 char   map_b64(char);
 char   map_b16(char);
 int    validate_b64(const char*, size_t);
 int    validate_b16(const char*, size_t);
 
+enum Coding_Mode{
+		 BASE64,
+		 BASE16,
+		 BASE8,
+		 BASE2,
+};
+
+typedef enum Coding_Mode c_mode;
+
 char option;
 FILE * in;
 char *msg;
 char *progname;
+c_mode mode = BASE64;
+
 
 int main(int argc, char ** argv){
   char opt;
   progname = argv[0];
-  while((opt = getopt(argc, argv, "eds:")) != -1){
+  while((opt = getopt(argc, argv, "edhs:")) != -1){
     switch(opt){
     case 'e':
       option = 'e';
@@ -58,6 +69,8 @@ int main(int argc, char ** argv){
     case 'd':
       option = 'd';
       break;
+    case 'h':
+      mode = BASE16;
     case 's':
       msg = optarg;
       break;
@@ -76,7 +89,20 @@ int main(int argc, char ** argv){
 
   char* out;
   if(option == 'e'){
+    switch(mode){
+
+    case BASE64:
     out = encode_b64(msg, strlen(msg));
+    break;
+    case BASE16:
+    out = encode_b64(msg, strlen(msg));
+    break;
+    case BASE8:
+    case BASE2:
+    default:
+      ERR_PRINT("Desired encoding mode is not yet supported!");
+
+    }
   }
 
   if(option == 'd'){
@@ -223,8 +249,8 @@ char * decode_b64(const char * msg, size_t msg_len){
 }
 
 
-char* encode_b16(const char* bytes){
-  size_t outlen = strlen(bytes) * 2 + 1;
+char* encode_b16(const char* bytes, size_t len){
+  size_t outlen = len * 2 + 1;
   char * hexstr = malloc(sizeof(char) * outlen);
   if(!hexstr){
     ERR_PRINT("Malloc failed to allocate requested %li bytes", outlen);
@@ -248,24 +274,38 @@ char map_b16(char b16_char){
   return INVALID_CHAR;
 }
 
-/* TODO: test this */
-char * decode_b16(const char * bytes){
-  if(strlen(bytes) % 2)
-    return NULL;
+int validate_b16(const char * bytes, size_t len){
+    int ret = 0;
+    for(size_t i = 0; i < len; i++){
+        if(map_b64(bytes[i]) == INVALID_CHAR){
+            ERR_PRINT("Invalid char %c at location %li", msg[i], i+1);
+            ret = 1;
+        }
+    }
+    return ret; 
 
-  char* hexstr = malloc(sizeof(*hexstr) * strlen(bytes) /2 + 1);
-  if(!hexstr)
+}
+
+/* TODO: test this */
+char * decode_b16(const char * bytes, size_t len){
+  if(len % 2){
+    ERR_PRINT("decode_b16: len must be divisible by 2");
     return NULL;
+  }
+
+  size_t outlen =  len /2 + 1;
+  char* hexstr = malloc(sizeof(*hexstr)* outlen);
+  if(!hexstr){
+    ERR_PRINT("Malloc failed to allocate requested %li bytes", outlen);
+    return NULL;
+  }
 
   size_t k = 0;
   char hi, lo;
   for(size_t i = 0; i < strlen(bytes); i+=2){
     hi = map_b16(bytes[i]);
     lo = map_b16(bytes[i+1]);
-    if(hi == INVALID_CHAR || lo == INVALID_CHAR)
-      return NULL;
     hexstr[k++] = (hi << 4) + lo;
-
   }
   hexstr[k] = '\0';
 

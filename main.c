@@ -32,7 +32,6 @@ const char * b16_alphabet = "0123456789abcdef";
  fprintf(stderr, "\n");	      \
 }
 
-
 char * encode_b64(const char*, size_t);
 char * decode_b64(const char*, size_t);
 char * encode_b16(const char*, size_t);
@@ -76,7 +75,7 @@ int main(int argc, char ** argv){
       break;
     case '?':
         ERR_PRINT("None of the necessary options was specified!");
-	printf("Usage: %s [-d|-e] [-f] [filename]\n", progname);
+	printf("Usage: %s [-d|-e] [-h] [-f] [filename]\n", progname);
 	exit(EXIT_FAILURE);
     }
   }

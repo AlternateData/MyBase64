@@ -5,6 +5,7 @@
 #include <math.h>
 
 const char * b64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char * b16_alphabet = "0123456789abcdef";
 
 #define TEST_MSG "Base 64 Test Message"
 
@@ -178,7 +179,13 @@ char * decode(const char * msg, size_t msg_len){
     return NULL;
   }
 
-  char * out = malloc(sizeof(char) * (msg_len*6)/8 + 1);
+  size_t outlen = (msg_len*6)/8 +1;
+  char * out = malloc(sizeof(char) * outlen);
+  if(!out){
+    ERR_PRINT("Malloc failed to allocate requested %li bytes", outlen);
+    return NULL;
+  }
+
   memset(out, 0, (msg_len*6)/8);
 
   int stream = 0;
@@ -211,3 +218,53 @@ char * decode(const char * msg, size_t msg_len){
   return out;
 }
 
+
+char* tohex(char* bytes){
+  size_t outlen = strlen(bytes) * 2 + 1;
+  char * hexstr = malloc(sizeof(char) * outlen);
+  if(!hexstr){
+    ERR_PRINT("Malloc failed to allocate requested %li bytes", outlen);
+    return NULL;
+  }
+  int k = 0;
+  for(size_t i = 0; i < strlen(bytes); i++){
+    hexstr[k++] = b16_alphabet[(bytes[i] >> 4) & 0xF];
+    hexstr[k++] = b16_alphabet[bytes[i] & 0xF];
+  }
+  hexstr[k++] = '\0';
+  return hexstr;
+
+}
+
+char mapb16(char b16_char){
+  for(int i = 0; i < 16; i++){
+    if(b16_char == b16_alphabet[i])
+      return i;
+  }
+  return INVALID_CHAR;
+}
+
+/* TODO: test this */
+char * fromhex(char * bytes){
+  if(strlen(bytes) % 2)
+    return NULL;
+
+  char* hexstr = malloc(sizeof(*hexstr) * strlen(bytes) /2 + 1);
+  if(!hexstr)
+    return NULL;
+
+  size_t k = 0;
+  char hi, lo;
+  for(size_t i = 0; i < strlen(bytes); i+=2){
+    hi = map(bytes[i]);
+    lo = map(bytes[i+1]);
+    if(hi == INVALID_CHAR || lo == INVALID_CHAR)
+      return NULL;
+    hexstr[k++] = (hi << 4) + lo;
+
+  }
+  hexstr[k] = '\0';
+
+  return hexstr;
+
+}

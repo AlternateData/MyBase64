@@ -1,5 +1,6 @@
+DEBUG = 0
 CC 	= gcc
-CFLAGS 	= -g -pedantic -Wall -Wextra
+CFLAGS 	= -g -pedantic -Wall -Wextra -DDEBUG=$(DEBUG)
 LDFLAGS =-lm
 NAME 	= main
 VERSION = 1.0
@@ -16,11 +17,6 @@ options:
 	@echo "    CFLAGS		$(CFLAGS)"
 	@echo "    LDFLAGS		$(LDFLAGS)"
 
-debug: setdebugopts options $(NAME)
-
-setdebugopts:
-	$(eval CFLAGS+=-DDEBUG=1)
-
 .c.o:
 	$(CC) -c $(CFLAGS) $<
 .s.o:
@@ -33,5 +29,5 @@ clean:
 	rm -f $(OBJ) $(NAME)
 
 
-.PHONY: all options clean debug setdebugopts
+.PHONY: all options clean
 

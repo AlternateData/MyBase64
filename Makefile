@@ -1,8 +1,8 @@
-DEBUG = 0
+DEBUG = 1
 CC 	= gcc
 CFLAGS 	= -g -pedantic -Wall -Wextra -DDEBUG=$(DEBUG)
 LDFLAGS =-lm
-NAME 	= main
+NAME 	= base64
 VERSION = 1.0
 SRC	= main.c
 OBJ	= $(SRC:.c=.o)

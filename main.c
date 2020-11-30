@@ -36,7 +36,7 @@ void decode_block(char* out, int32_t x){
         out[2] =  x        & 0xff;
 }
 
-char * encode_b64(char *in){
+char * encode(char *in){
     int32_t inlen = strlen(in);
     int32_t outlen = 4 * (inlen / 3);
     int32_t i = 0;
@@ -67,7 +67,7 @@ char * encode_b64(char *in){
 }
 
 
-char* decode_b64(char * in){
+char* decode(char * in){
     int32_t inlen = strlen(in);
     int32_t outlen = (inlen * 6) / 8;
     int32_t padding = 0, i = 0;
@@ -93,7 +93,7 @@ char* decode_b64(char * in){
         }
     }
 
-    for(; i < (inlen / 4) * 4; i += 4, block += 3){
+    for(; i < (inlen / 4) * 4; i += 4, block += 3)
         decode_block(block, pack(in[i], in[i + 1], in[i+2], in[i+3], 6));
     }
 
@@ -115,9 +115,9 @@ int main(int argc, char * argv[]){
     char * out;
 
     if(!strcmp(argv[1], "decode")){
-        out = decode_b64(input);
+        out = decode(input);
     }else if(!strcmp(argv[1], "encode")){
-        out = encode_b64(input);
+        out = encode(input);
     }else{
         die("Wrong Usage");
     }

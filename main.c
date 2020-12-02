@@ -78,7 +78,7 @@ char* decode(char * in){
         padding++;
 
     if(padding > 2)
-        die("%i padding characters were found but up to 2 are okay!", padding);
+        die("%i padding characters were found. That is too much.", padding);
 
     outlen -= padding;
     char * out = malloc(outlen * sizeof(char));
@@ -93,13 +93,13 @@ char* decode(char * in){
     }
 
     for(; i < (inlen / 4) * 4; i += 4, block += 3)
-        decode_block(block, in[i], in[i + 1], in[i+2], in[i+3]);
+        decode_block(block, in[i], in[i + 1], in[i + 2], in[i + 3]);
 
     if(padding == 1)
-        decode_block(block, in[i], in[i + 1], in[i+2], 0);
+        decode_block(block, in[i], in[i + 1], in[i + 2], 0);
 
     if(padding == 2)
-        decode_block(block, in[i] , in[i + 1], 0, 0);
+        decode_block(block, in[i], in[i + 1], 0, 0);
 
     out[outlen] = 0;
     return out;

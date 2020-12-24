@@ -1,9 +1,7 @@
-DEBUG = 1
 CC 	= gcc
-CFLAGS 	= -g -pedantic -Wall -Wextra -DDEBUG=$(DEBUG)
-LDFLAGS =-lm
+CFLAGS 	= -pedantic -Wall -Wextra -g -Og
+LDFLAGS =
 NAME 	= base64
-VERSION = 1.0
 SRC	= main.c
 OBJ	= $(SRC:.c=.o)
 
@@ -11,7 +9,7 @@ OBJ	= $(SRC:.c=.o)
 all: options $(NAME)
 
 options:
-	@echo "options for making $(NAME) $(VERSION)"
+	@echo "options for making $(NAME)"
 	@echo "    Source Files	$(SRC)"
 	@echo "    Object Files	$(OBJ)"
 	@echo "    CFLAGS		$(CFLAGS)"

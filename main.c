@@ -17,8 +17,8 @@ char map(char d){
         return d - 'A';
     if('a' <=  d && d <= 'z')
         return d - 'a' + 26;
-    if('1' <=  d && d <= '9')
-        return d - '1' + 53;
+    if('0' <=  d && d <= '9')
+        return d - '0' + 52;
     return -1;
 }
 

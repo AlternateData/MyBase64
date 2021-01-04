@@ -103,7 +103,7 @@ char* decode(char * in){
     if(padding == 2)
         decode_block(block, in[i], in[i + 1], 0, 0);
 
-    out[outlen] = 0;
+    out[outlen] = '\0';
     return out;
 }
 

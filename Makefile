@@ -1,9 +1,9 @@
-CC 	    = gcc
-CFLAGS 	= -pedantic -Wall -Wextra -g -Og
+CC      = gcc
+CFLAGS  = -pedantic -Wall -Wextra -g -Og
 LDFLAGS =
-NAME 	= base64
-SRC	    = main.c
-OBJ	    = $(SRC:.c=.o)
+NAME    = base64
+SRC     = main.c
+OBJ     = $(SRC:.c=.o)
 
 
 all: $(NAME)
